@@ -1,8 +1,9 @@
 extern crate libc;
 extern crate x11;
 
-use std::process;
+use std::{fs, process};
 use std::mem::zeroed;
+use std::ffi::CStr;
 
 use x11::xlib;
 
@@ -17,7 +18,11 @@ fn main() {
         process::exit(1);
     }
 
-    turtle::setup_async_keys(&dpy);
+    let raw_config = &fs::read_to_string("/home/pineapple/.config/turtle/config.ron").expect("failed to read config");
+    let config: Vec<(u32, &str, &str, Option<Vec<&str>>)> = ron::from_str(raw_config).unwrap();
+    let keybinds = config;
+
+    turtle::setup_async_keys(&dpy, &keybinds);
 
     start.subwindow = 0;
 
@@ -30,19 +35,14 @@ fn main() {
             match event.get_type() {
                 xlib::KeyPress => {
                     let xkey: xlib::XKeyEvent = From::from(event);
-                    match xkey.keycode {
-                        24 => {
-                            eprintln!("Exiting turtle");
-                            xlib::XCloseDisplay(dpy);
-                        },
-
-                        25 => {
-                            if xkey.subwindow != 0 { xlib::XKillClient(dpy, xkey.subwindow); }
-                        },
-
-                        65 => turtle::spawn(vec!["dmenu_run"]),
-
-                        _ => eprintln!("Pressed key {}", xkey.keycode)
+                    for keybind in &keybinds {
+                        if keybind.1 == CStr::from_ptr(
+                            xlib::XKeysymToString(
+                                xlib::XKeycodeToKeysym(dpy, xkey.keycode as u8, 0)
+                            )
+                        ).to_str().unwrap() {
+                            turtle::parse(&dpy, &xkey, keybind);
+                        }
                     }
                 },
 

@@ -1,0 +1,10 @@
+// Modifiers:
+// Shift = 1; Ctrl = 4; Alt = 8; Win = 64
+// To combine modifiers use bitwise or
+// For example, Win + Shift = 65
+
+[
+    (65, "q", "quit", None),
+    (64, "w", "kill_window", None),
+    (64, "space", "spawn", Some(["dmenu_run"])),
+]
