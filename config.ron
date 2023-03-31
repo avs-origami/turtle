@@ -22,6 +22,7 @@
         (65, "q", "quit", None),
         (64, "w", "kill_window", None),
         (64, "space", "spawn", Some(["dmenu_run"])),
+        (64, "Return", "spawn", Some(["st"])),
         (64, "f", "maximize", None),
         (64, "t", "stack", None),
     ],

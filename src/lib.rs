@@ -1,7 +1,7 @@
 use std::{process, ffi::CString};
 
 use libc::{c_int, c_uint};
-use x11::xlib::{self, Display, XKeyEvent, Window};
+use x11::xlib::{self, Display, XKeyEvent};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct RonConfig<'a> {
@@ -39,23 +39,27 @@ pub fn kill_window(dpy: &*mut Display, xkey: &XKeyEvent) {
 }
 
 pub fn spawn(com: &Vec<&str>) {
-    let _ = process::Command::new(com[0]).args(&com[1..]).status();
+    let _ = process::Command::new(com[0]).args(&com[1..]).spawn();
 }
 
-pub fn maximize(dpy: &*mut Display, win: Window) {
-    unsafe {
-        let width = xlib::XDisplayWidth(*dpy, xlib::XDefaultScreen(*dpy));
-        let height = xlib::XDisplayHeight(*dpy, xlib::XDefaultScreen(*dpy));
-        xlib::XMoveResizeWindow(*dpy, win, 0, 0, width as c_uint, height as c_uint);
-    };
+pub fn maximize(dpy: &*mut Display, xkey: &XKeyEvent) {
+    if xkey.subwindow != 0 {
+        unsafe {
+            let width = xlib::XDisplayWidth(*dpy, xlib::XDefaultScreen(*dpy));
+            let height = xlib::XDisplayHeight(*dpy, xlib::XDefaultScreen(*dpy));
+            xlib::XMoveResizeWindow(*dpy, xkey.subwindow, 0, 0, width as c_uint, height as c_uint);
+        };
+    }
 }
 
-pub fn stack(dpy: &*mut Display, win: Window, cfg: &Config) {
-    unsafe {
-        let width = xlib::XDisplayWidth(*dpy, xlib::XDefaultScreen(*dpy)) - 2 * cfg.edge_gap;
-        let height = xlib::XDisplayHeight(*dpy, xlib::XDefaultScreen(*dpy)) - (cfg.top_gap + cfg.edge_gap);
-        xlib::XMoveResizeWindow(*dpy, win, cfg.edge_gap, cfg.top_gap, width as c_uint, height as c_uint);
-    };
+pub fn stack(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
+    if xkey.subwindow != 0 {
+        unsafe {
+            let width = xlib::XDisplayWidth(*dpy, xlib::XDefaultScreen(*dpy)) - 2 * cfg.edge_gap;
+            let height = xlib::XDisplayHeight(*dpy, xlib::XDefaultScreen(*dpy)) - (cfg.top_gap + cfg.edge_gap);
+            xlib::XMoveResizeWindow(*dpy, xkey.subwindow, cfg.edge_gap, cfg.top_gap, width as c_uint, height as c_uint);
+        };
+    }
 }
 
 pub fn parse(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config, keybind: &(u32, &str, &str, Option<Vec<&str>>)) {
@@ -63,8 +67,8 @@ pub fn parse(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config, keybind: &(u32,
         "quit" => quit(dpy),
         "kill_window" => kill_window(dpy, xkey),
         "spawn" => spawn(keybind.3.as_ref().unwrap()),
-        "maximize" => maximize(dpy, xkey.subwindow),
-        "stack" => stack(dpy, xkey.subwindow, cfg),
+        "maximize" => maximize(dpy, xkey),
+        "stack" => stack(dpy, xkey, cfg),
         _ => ()
     }
 }
