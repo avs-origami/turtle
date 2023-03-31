@@ -7,6 +7,8 @@ use std::ffi::CStr;
 
 use x11::xlib;
 
+use turtle::{Config, RonConfig};
+
 fn main() {
     let mut arg0 = 0x0_i8;
     let dpy: *mut xlib::Display = unsafe { xlib::XOpenDisplay(&mut arg0) };
@@ -19,8 +21,8 @@ fn main() {
     }
 
     let raw_config = &fs::read_to_string("/home/pineapple/.config/turtle/config.ron").expect("failed to read config");
-    let config: Vec<(u32, &str, &str, Option<Vec<&str>>)> = ron::from_str(raw_config).unwrap();
-    let keybinds = config;
+    let config: Config = Config::from(ron::from_str::<RonConfig>(raw_config).unwrap());
+    let keybinds = ron::from_str::<RonConfig>(raw_config).unwrap().keybinds;
 
     turtle::setup_async_keys(&dpy, &keybinds);
 
@@ -41,7 +43,7 @@ fn main() {
                                 xlib::XKeycodeToKeysym(dpy, xkey.keycode as u8, 0)
                             )
                         ).to_str().unwrap() {
-                            turtle::parse(&dpy, &xkey, keybind);
+                            turtle::parse(&dpy, &xkey, &config, keybind);
                         }
                     }
                 },

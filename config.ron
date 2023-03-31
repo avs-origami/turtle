@@ -2,9 +2,27 @@
 // Shift = 1; Ctrl = 4; Alt = 8; Win = 64
 // To combine modifiers use bitwise or
 // For example, Win + Shift = 65
+//
+// Keybinds should be in the format:
+// (MOD, KEY, ACTION, ARGS)
+//
+// ARGS can either be Some([str])
+// or None depending on ACTION
+//
+// Available actions:
+//
+// quit - quit turtle
+// kill_window - kill the focused window
+// spawn - run command specified in ARGS
 
-[
-    (65, "q", "quit", None),
-    (64, "w", "kill_window", None),
-    (64, "space", "spawn", Some(["dmenu_run"])),
-]
+(
+    top_gap: 16,
+    edge_gap: 4,
+    keybinds: [
+        (65, "q", "quit", None),
+        (64, "w", "kill_window", None),
+        (64, "space", "spawn", Some(["dmenu_run"])),
+        (64, "f", "maximize", None),
+        (64, "t", "stack", None),
+    ],
+)
