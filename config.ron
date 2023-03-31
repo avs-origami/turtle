@@ -25,5 +25,10 @@
         (64, "Return", "spawn", Some(["st"])),
         (64, "f", "maximize", None),
         (64, "t", "stack", None),
+        (64, "s", "shrink", None),
     ],
+    mousebinds: [
+        (64, 1, "move"),
+        (64, 3, "resize"),
+    ]
 )
