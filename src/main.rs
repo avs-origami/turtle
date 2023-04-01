@@ -1,7 +1,6 @@
 extern crate libc;
 extern crate x11;
 
-use std::collections::HashMap;
 use std::{fs, process};
 use std::mem::zeroed;
 use std::ffi::CStr;
@@ -12,9 +11,12 @@ use turtle::{Config, RonConfig};
 
 fn main() {
     let mut arg0 = 0x0_i8;
+
+    // Open the display and get the root window
     let dpy: *mut xlib::Display = unsafe { xlib::XOpenDisplay(&mut arg0) };
     let root = unsafe { xlib::XDefaultRootWindow(dpy) };
 
+    // Select events to be reported
     unsafe {
         xlib::XSelectInput(dpy, root, xlib::SubstructureRedirectMask | xlib::SubstructureNotifyMask);
     }
@@ -26,6 +28,7 @@ fn main() {
         process::exit(1);
     }
 
+    // Load ~/.config/turtle/config.ron
     let raw_config = &fs::read_to_string("/home/pineapple/.config/turtle/config.ron").expect("failed to read config");
     let config: Config = Config::from(ron::from_str::<RonConfig>(raw_config).unwrap());
     let keybinds = ron::from_str::<RonConfig>(raw_config).unwrap().keybinds;
@@ -37,7 +40,9 @@ fn main() {
 
     let mut event: xlib::XEvent = unsafe { zeroed() };
 
-    let mut windows: HashMap<u64, bool> = HashMap::new();
+    // List of open windows
+    let mut windows: Vec<(u64, bool)> = Vec::new();
+    let mut current_window = 0;
 
     loop {
         unsafe {
@@ -81,6 +86,25 @@ fn main() {
                 xlib::MapRequest => {
                     let ev: xlib::XMapRequestEvent = From::from(event);
                     turtle::map(&dpy, ev, &config);
+                    windows.push((ev.window, true));
+                    windows[current_window].1 = false;
+                    current_window = windows.len() - 1;
+                }
+
+                xlib::DestroyNotify => {
+                    let ev: xlib::XDestroyWindowEvent = From::from(event);
+                    let mut index: Option<usize> = None;
+                    
+                    for (i, (window, _)) in windows.iter().enumerate() {
+                        if *window == ev.window {
+                            index = Some(i);
+                            break;
+                        }
+                    }
+                    
+                    if let Some(i) = index {
+                        windows.remove(i);
+                    }
                 }
 
                 xlib::ButtonRelease => {
@@ -89,19 +113,6 @@ fn main() {
 
                 _ => {}
             };
-
-            /*let w: *mut xlib::Window = zeroed();
-            let revert_to: *mut i32 = zeroed();
-            xlib::XGetInputFocus(dpy, w, revert_to);
-
-            windows.entry(*w).or_insert(false);
-
-            for window in windows {
-                if window.1 == false {
-                    turtle::layout(&dpy, window.0, &config);
-                    windows.insert(window.0, true);
-                }
-            }*/
         };
     }
 }

@@ -1,8 +1,9 @@
 use std::{process, ffi::CString};
 
 use libc::{c_int, c_uint};
-use x11::xlib::{self, Display, XKeyEvent, XButtonEvent, XWindowAttributes, XEvent, XWindowChanges, XConfigureWindow};
+use x11::xlib::{self, Display, XKeyEvent, XButtonEvent, XWindowAttributes, XEvent, XWindowChanges};
 
+/// Contains configuration for turtle
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct RonConfig<'a> {
     pub top_gap: i32,
@@ -13,6 +14,7 @@ pub struct RonConfig<'a> {
     pub mousebinds: Vec<(u32, u32, &'a str)>,
 }
 
+/// Config without keybinds or mousebinds
 pub struct Config {
     pub top_gap: i32,
     pub edge_gap: i32,
@@ -27,6 +29,7 @@ impl From<RonConfig<'_>> for Config {
     }
 }
 
+/// Exit turtle
 pub fn quit(dpy: &*mut Display) {
     unsafe {
         eprintln!("Exiting turtle");
@@ -34,16 +37,18 @@ pub fn quit(dpy: &*mut Display) {
     }
 }
 
+/// Kill the focused window
 pub fn kill_window(dpy: &*mut Display, xkey: &XKeyEvent) {
     unsafe {
         if xkey.subwindow != 0 { xlib::XKillClient(*dpy, xkey.subwindow); }
     }
 }
-
+ /// Spawn a program
 pub fn spawn(com: &Vec<&str>) {
     let _ = process::Command::new(com[0]).args(&com[1..]).spawn();
 }
 
+/// Make a window fullscreen
 pub fn maximize(dpy: &*mut Display, xkey: &XKeyEvent) {
     if xkey.subwindow != 0 {
         unsafe {
@@ -54,6 +59,7 @@ pub fn maximize(dpy: &*mut Display, xkey: &XKeyEvent) {
     }
 }
 
+/// Make a window big
 pub fn stack(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
     if xkey.subwindow != 0 {
         unsafe {
@@ -64,6 +70,7 @@ pub fn stack(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
     }
 }
 
+/// Make a window small
 pub fn shrink(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
     if xkey.subwindow != 0 {
         unsafe {
@@ -74,6 +81,7 @@ pub fn shrink(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
     }
 }
 
+/// Configure newly created windows
 pub fn layout(dpy: &*mut Display, ev: xlib::XConfigureRequestEvent, cfg: &Config) {
     let mut changes = XWindowChanges { 
         x: cfg.edge_gap,
@@ -85,9 +93,9 @@ pub fn layout(dpy: &*mut Display, ev: xlib::XConfigureRequestEvent, cfg: &Config
         stack_mode: ev.detail
     };
 
-    unsafe { XConfigureWindow(*dpy, ev.window, ev.value_mask as u32, &mut changes); }
+    unsafe { xlib::XConfigureWindow(*dpy, ev.window, ev.value_mask as u32, &mut changes); }
 }
-
+ /// Map newly created windows to the screen
 pub fn map(dpy: &*mut Display, ev: xlib::XMapRequestEvent, cfg: &Config) {
     unsafe {
         xlib::XMapWindow(*dpy, ev.window);
@@ -97,6 +105,7 @@ pub fn map(dpy: &*mut Display, ev: xlib::XMapRequestEvent, cfg: &Config) {
     };
 }
 
+ /// Move a window
 pub fn move_win(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr: XWindowAttributes) {
     if start.subwindow != 0 {
         let xbutton: xlib::XButtonEvent = From::from(event);
@@ -113,6 +122,7 @@ pub fn move_win(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr: XW
     }
 }
 
+/// Resize a window
 pub fn resize_win(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr: XWindowAttributes) {
     if start.subwindow != 0 {
         let xbutton: xlib::XButtonEvent = From::from(event);
@@ -128,7 +138,7 @@ pub fn resize_win(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr: 
         }
     }
 }
-
+ /// Parse keybinds
 pub fn parse_keys(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config, keybind: &(u32, &str, &str, Option<Vec<&str>>)) {
     match keybind.2 {
         "quit" => quit(dpy),
@@ -141,6 +151,7 @@ pub fn parse_keys(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config, keybind: &
     }
 }
 
+/// Parse mousebinds
 pub fn parse_mouse(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr: XWindowAttributes, mousebind: &(u32, u32, &str)) {
     match mousebind.2 {
         "move" => move_win(dpy, event, start, attr),
@@ -149,6 +160,7 @@ pub fn parse_mouse(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr:
     }
 }
 
+/// Setup asynchronous capture of key- and mouse- binds
 pub fn setup_async_keys(dpy: &*mut Display, keybinds: &Vec<(u32, &str, &str, Option<Vec<&str>>)>, mousebinds: &Vec<(u32, u32, &str)>) {
     for keybind in keybinds {
         let key = CString::new(keybind.1).unwrap();
