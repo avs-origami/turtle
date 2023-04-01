@@ -13,6 +13,11 @@ use turtle::{Config, RonConfig};
 fn main() {
     let mut arg0 = 0x0_i8;
     let dpy: *mut xlib::Display = unsafe { xlib::XOpenDisplay(&mut arg0) };
+    let root = unsafe { xlib::XDefaultRootWindow(dpy) };
+
+    unsafe {
+        xlib::XSelectInput(dpy, root, xlib::SubstructureRedirectMask | xlib::SubstructureNotifyMask);
+    }
 
     let mut attr: xlib::XWindowAttributes = unsafe { zeroed() };
     let mut start: xlib::XButtonEvent = unsafe { zeroed() };
@@ -68,6 +73,16 @@ fn main() {
                     }
                 },
 
+                xlib::ConfigureRequest => {
+                    let ev: xlib::XConfigureRequestEvent = From::from(event);
+                    turtle::layout(&dpy, ev, &config);
+                },
+
+                xlib::MapRequest => {
+                    let ev: xlib::XMapRequestEvent = From::from(event);
+                    turtle::map(&dpy, ev, &config);
+                }
+
                 xlib::ButtonRelease => {
                     start.subwindow = 0;
                 },
@@ -75,11 +90,18 @@ fn main() {
                 _ => {}
             };
 
-            for window in &windows {
-                if ! window.1 {
-                    turtle::layout(&dpy, *window.0, &config);
+            /*let w: *mut xlib::Window = zeroed();
+            let revert_to: *mut i32 = zeroed();
+            xlib::XGetInputFocus(dpy, w, revert_to);
+
+            windows.entry(*w).or_insert(false);
+
+            for window in windows {
+                if window.1 == false {
+                    turtle::layout(&dpy, window.0, &config);
+                    windows.insert(window.0, true);
                 }
-            }
+            }*/
         };
     }
 }

@@ -1,7 +1,7 @@
 use std::{process, ffi::CString};
 
 use libc::{c_int, c_uint};
-use x11::xlib::{self, Display, XKeyEvent, XButtonEvent, XWindowAttributes, XEvent};
+use x11::xlib::{self, Display, XKeyEvent, XButtonEvent, XWindowAttributes, XEvent, XWindowChanges, XConfigureWindow};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct RonConfig<'a> {
@@ -74,11 +74,26 @@ pub fn shrink(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
     }
 }
 
-pub fn layout(dpy: &*mut Display, win: u64, cfg: &Config) {
+pub fn layout(dpy: &*mut Display, ev: xlib::XConfigureRequestEvent, cfg: &Config) {
+    let mut changes = XWindowChanges { 
+        x: cfg.edge_gap,
+        y: cfg.top_gap,
+        width: unsafe { (xlib::XDisplayWidth(*dpy, xlib::XDefaultScreen(*dpy)) - 2 * cfg.edge_gap) / 4 },
+        height: unsafe { (xlib::XDisplayHeight(*dpy, xlib::XDefaultScreen(*dpy)) - (cfg.top_gap + cfg.edge_gap)) / 4 },
+        border_width: ev.border_width,
+        sibling: ev.above,
+        stack_mode: ev.detail
+    };
+
+    unsafe { XConfigureWindow(*dpy, ev.window, ev.value_mask as u32, &mut changes); }
+}
+
+pub fn map(dpy: &*mut Display, ev: xlib::XMapRequestEvent, cfg: &Config) {
     unsafe {
-        let width = (xlib::XDisplayWidth(*dpy, xlib::XDefaultScreen(*dpy)) - 2 * cfg.edge_gap) / 4;
-        let height = (xlib::XDisplayHeight(*dpy, xlib::XDefaultScreen(*dpy)) - (cfg.top_gap + cfg.edge_gap)) / 4;
-        xlib::XMoveResizeWindow(*dpy, win, cfg.edge_gap, cfg.top_gap, width as c_uint, height as c_uint);
+        xlib::XMapWindow(*dpy, ev.window);
+        let width = xlib::XDisplayWidth(*dpy, xlib::XDefaultScreen(*dpy)) - 2 * cfg.edge_gap;
+        let height = xlib::XDisplayHeight(*dpy, xlib::XDefaultScreen(*dpy)) - (cfg.top_gap + cfg.edge_gap);
+        xlib::XMoveResizeWindow(*dpy, ev.window, cfg.edge_gap, cfg.top_gap, width as c_uint, height as c_uint);
     };
 }
 
