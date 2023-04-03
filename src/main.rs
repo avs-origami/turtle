@@ -5,6 +5,7 @@ use std::{fs, process};
 use std::mem::zeroed;
 use std::ffi::CStr;
 
+use moveslice::Moveslice;
 use x11::xlib;
 
 use turtle::{Config, RonConfig};
@@ -41,8 +42,7 @@ fn main() {
     let mut event: xlib::XEvent = unsafe { zeroed() };
 
     // List of open windows
-    let mut windows: Vec<(u64, bool)> = Vec::new();
-    let mut current_window = 0;
+    let mut windows: Vec<u64> = Vec::new();
 
     loop {
         unsafe {
@@ -57,7 +57,7 @@ fn main() {
                                 xlib::XKeycodeToKeysym(dpy, xkey.keycode as u8, 0)
                             )
                         ).to_str().unwrap() {
-                            turtle::parse_keys(&dpy, &xkey, &config, keybind);
+                            turtle::parse_keys(&dpy, &xkey, &config, root, &mut windows, keybind);
                         }
                     }
                 },
@@ -78,6 +78,12 @@ fn main() {
                     }
                 },
 
+                xlib::CreateNotify => {
+                    let ev: xlib::XCreateWindowEvent = From::from(event);
+                    windows.push(ev.window);
+                    windows.moveslice((windows.len() - 1) ..= (windows.len() - 1), 0);
+                }
+
                 xlib::ConfigureRequest => {
                     let ev: xlib::XConfigureRequestEvent = From::from(event);
                     turtle::layout(&dpy, ev, &config);
@@ -86,25 +92,10 @@ fn main() {
                 xlib::MapRequest => {
                     let ev: xlib::XMapRequestEvent = From::from(event);
                     turtle::map(&dpy, ev, &config);
-                    windows.push((ev.window, true));
-                    windows[current_window].1 = false;
-                    current_window = windows.len() - 1;
                 }
 
                 xlib::DestroyNotify => {
-                    let ev: xlib::XDestroyWindowEvent = From::from(event);
-                    let mut index: Option<usize> = None;
-                    
-                    for (i, (window, _)) in windows.iter().enumerate() {
-                        if *window == ev.window {
-                            index = Some(i);
-                            break;
-                        }
-                    }
-                    
-                    if let Some(i) = index {
-                        windows.remove(i);
-                    }
+                    windows.remove(0);
                 }
 
                 xlib::ButtonRelease => {

@@ -16,16 +16,19 @@
 // spawn - run command specified in ARGS
 
 (
-    top_gap: 16,
-    edge_gap: 4,
+    top_gap: 21,
+    edge_gap: 3,
     keybinds: [
         (65, "q", "quit", None),
         (64, "w", "kill_window", None),
-        (64, "space", "spawn", Some(["dmenu_run"])),
+        (64, "space", "spawn", Some(["rofi", "-show", "run"])),
         (64, "Return", "spawn", Some(["st"])),
         (64, "f", "maximize", None),
         (64, "t", "stack", None),
         (64, "s", "shrink", None),
+        (64, "bracketleft", "next", None),
+        (64, "bracketright", "prev", None),
+        (64, "Tab", "last_win", None),
     ],
     mousebinds: [
         (64, 1, "move"),

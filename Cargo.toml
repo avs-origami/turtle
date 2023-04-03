@@ -10,3 +10,4 @@ x11 = { version = "*", features = ["xlib"] }
 libc = "*"
 ron = "0.8"
 serde = { version = "1", features = ["derive"] }
+moveslice = "2.0"

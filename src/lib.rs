@@ -1,7 +1,8 @@
 use std::{process, ffi::CString};
 
 use libc::{c_int, c_uint};
-use x11::xlib::{self, Display, XKeyEvent, XButtonEvent, XWindowAttributes, XEvent, XWindowChanges};
+use moveslice::Moveslice;
+use x11::xlib::{self, Display, XKeyEvent, XButtonEvent, XWindowAttributes, XEvent, XWindowChanges, Window};
 
 /// Contains configuration for turtle
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -81,6 +82,30 @@ pub fn shrink(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
     }
 }
 
+/// Switch to the next window
+pub fn next_window(dpy: &*mut Display, xkey: &XKeyEvent, windows: &mut Vec<u64>, root: Window) {
+    if xkey.subwindow != 0 {
+        unsafe { xlib::XCirculateSubwindowsDown(*dpy, root); };
+        windows.moveslice((windows.len() - 1) ..= (windows.len() - 1), 0);
+    }
+}
+
+/// Switch to the previous window
+pub fn prev_window(dpy: &*mut Display, xkey: &XKeyEvent, windows: &mut Vec<u64>, root: Window) {
+    if xkey.subwindow != 0 {
+        unsafe { xlib::XCirculateSubwindowsDown(*dpy, root); };
+        windows.moveslice(0 ..= 0, windows.len() - 1);
+    }
+}
+
+/// Switch to the last used window
+pub fn last_window(dpy: &*mut Display, xkey: &XKeyEvent, windows: &mut Vec<u64>) {
+    if xkey.subwindow != 0 && windows.len() >= 2 {
+        unsafe { xlib::XRaiseWindow(*dpy, windows[1]); };
+        windows.moveslice(1 ..= 1, 0);
+    }
+}
+
 /// Configure newly created windows
 pub fn layout(dpy: &*mut Display, ev: xlib::XConfigureRequestEvent, cfg: &Config) {
     let mut changes = XWindowChanges { 
@@ -139,7 +164,13 @@ pub fn resize_win(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr: 
     }
 }
  /// Parse keybinds
-pub fn parse_keys(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config, keybind: &(u32, &str, &str, Option<Vec<&str>>)) {
+pub fn parse_keys(dpy: &*mut Display,
+    xkey: &XKeyEvent,
+    cfg: &Config,
+    root: Window,
+    windows: &mut Vec<u64>,
+    keybind: &(u32, &str, &str, Option<Vec<&str>>)
+) {
     match keybind.2 {
         "quit" => quit(dpy),
         "kill_window" => kill_window(dpy, xkey),
@@ -147,12 +178,21 @@ pub fn parse_keys(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config, keybind: &
         "maximize" => maximize(dpy, xkey),
         "stack" => stack(dpy, xkey, cfg),
         "shrink" => shrink(dpy, xkey, cfg),
+        "next" => next_window(dpy, xkey, windows, root),
+        "prev" => prev_window(dpy, xkey, windows, root),
+        "last_win" => last_window(dpy, xkey, windows),
         _ => ()
     }
 }
 
 /// Parse mousebinds
-pub fn parse_mouse(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr: XWindowAttributes, mousebind: &(u32, u32, &str)) {
+pub fn parse_mouse(
+    dpy: &*mut Display,
+    event: XEvent,
+    start: XButtonEvent,
+    attr: XWindowAttributes,
+    mousebind: &(u32, u32, &str)
+) {
     match mousebind.2 {
         "move" => move_win(dpy, event, start, attr),
         "resize" => resize_win(dpy, event, start, attr),
@@ -161,7 +201,11 @@ pub fn parse_mouse(dpy: &*mut Display, event: XEvent, start: XButtonEvent, attr:
 }
 
 /// Setup asynchronous capture of key- and mouse- binds
-pub fn setup_async_keys(dpy: &*mut Display, keybinds: &Vec<(u32, &str, &str, Option<Vec<&str>>)>, mousebinds: &Vec<(u32, u32, &str)>) {
+pub fn setup_async_keys(
+    dpy: &*mut Display,
+    keybinds: &Vec<(u32, &str, &str, Option<Vec<&str>>)>,
+    mousebinds: &Vec<(u32, u32, &str)>
+) {
     for keybind in keybinds {
         let key = CString::new(keybind.1).unwrap();
         unsafe {
@@ -173,8 +217,8 @@ pub fn setup_async_keys(dpy: &*mut Display, keybinds: &Vec<(u32, &str, &str, Opt
     for mousebind in mousebinds {
         unsafe {
             xlib::XGrabButton(*dpy, mousebind.1, mousebind.0, xlib::XDefaultRootWindow(*dpy), true as c_int,
-            (xlib::ButtonPressMask|xlib::ButtonReleaseMask|xlib::PointerMotionMask) as c_uint, xlib::GrabModeAsync, xlib::GrabModeAsync,
-            0, 0);
+            (xlib::ButtonPressMask|xlib::ButtonReleaseMask|xlib::PointerMotionMask) as c_uint,
+            xlib::GrabModeAsync, xlib::GrabModeAsync, 0, 0);
         };
     }
 }
