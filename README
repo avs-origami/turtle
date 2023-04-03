@@ -1,7 +1,39 @@
-|-------------------------------|
-| TURTLE                        |           ()---()
-|-------------------------------|       ,--/ ()()()\
-| A tiny window manager written |       |: |()()()()|>
-| in Rust.                      |       `--\ ()()()/
-|-------------------------------|           ()---()
-=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=
+|-----------------------|
+| TURTLE                |           ()---()
+|-----------------------|       ,--/ ()()()\
+| A tiny window manager |       |: |()()()()|>
+| written in Rust.      |       `--\ ()()()/
+|-----------------------|           ()---()
+=~=~=~=~=~=~=~=~=~=~=~=~=
+
+Turtle is a small and simple stacking window
+manager written in Rust. It aims to be simple
+while providing enough features to be practical for
+everyday use.
+
+=== CONFIGURATION
+=================
+
+Turtle can be configured by editing the config file
+located at ~/.config/turtle/config.ron. If this
+file doesn't exist you will need to create it for
+turtle to start. Try copying config.ron from this
+repo as a starting place for your configuration.
+
+Turtle also supports running a startup script. To
+do this create ~/.config/turtle/autostart and give
+it executable permissions. This script will then be
+run every time turtle is started.
+
+=== WORKSPACES
+==============
+
+Turtle doesn't have workspaces. You can cycle
+forwards / backwards through open windows or switch
+to the last focused window though.
+
+=== POSSIBLE FUTURE ADDITIONS
+=============================
+
+- window borders
+- on-the-fly config reloading

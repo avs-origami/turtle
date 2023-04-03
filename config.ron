@@ -9,29 +9,50 @@
 // ARGS can either be Some([str])
 // or None depending on ACTION
 //
-// Available actions:
+// Available key actions:
 //
 // quit - quit turtle
-// kill_window - kill the focused window
+// kill - kill the focused window
 // spawn - run command specified in ARGS
+// maximize - make the focused window fullscreen
+// stack - make the focused window big
+// shrink - make the focused window small
+// next - cycle to the next window
+// prev - cycle to the previous window
+// last - switch to last focused window
+//
+// Mousebinds should be in the format:
+// (MOD, BUTTON, ACTION)
+//
+// Available mouse actions:
+// 
+// move - move the selected window
+// resize - resize the selected window
 
 (
     top_gap: 21,
     edge_gap: 3,
+
     keybinds: [
-        (65, "q", "quit", None),
-        (64, "w", "kill_window", None),
-        (64, "space", "spawn", Some(["rofi", "-show", "run"])),
-        (64, "Return", "spawn", Some(["st"])),
-        (64, "f", "maximize", None),
-        (64, "t", "stack", None),
-        (64, "s", "shrink", None),
-        (64, "bracketleft", "next", None),
-        (64, "bracketright", "prev", None),
-        (64, "Tab", "last_win", None),
+
+        (65, "q",            "quit",     None),
+        (64, "w",            "kill",     None),
+        (64, "f",            "maximize", None),
+        (64, "t",            "stack",    None),
+        (64, "s",            "shrink",   None),
+        (64, "Tab",          "last",     None),
+        (64, "bracketleft",  "next",     None),
+        (64, "bracketright", "prev",     None),
+
+        (64, "Return",       "spawn",    Some( ["st"]        )),
+        (64, "space",        "spawn",    Some( ["dmenu_run"] )),
+
     ],
+
     mousebinds: [
+
         (64, 1, "move"),
         (64, 3, "resize"),
+        
     ]
 )

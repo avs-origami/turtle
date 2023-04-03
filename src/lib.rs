@@ -173,14 +173,14 @@ pub fn parse_keys(dpy: &*mut Display,
 ) {
     match keybind.2 {
         "quit" => quit(dpy),
-        "kill_window" => kill_window(dpy, xkey),
+        "kill" => kill_window(dpy, xkey),
         "spawn" => spawn(keybind.3.as_ref().unwrap()),
         "maximize" => maximize(dpy, xkey),
         "stack" => stack(dpy, xkey, cfg),
         "shrink" => shrink(dpy, xkey, cfg),
         "next" => next_window(dpy, xkey, windows, root),
         "prev" => prev_window(dpy, xkey, windows, root),
-        "last_win" => last_window(dpy, xkey, windows),
+        "last" => last_window(dpy, xkey, windows),
         _ => ()
     }
 }
