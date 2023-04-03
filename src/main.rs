@@ -1,7 +1,7 @@
 extern crate libc;
 extern crate x11;
 
-use std::{fs, process};
+use std::{env, fs, process};
 use std::mem::zeroed;
 use std::ffi::CStr;
 
@@ -30,10 +30,14 @@ fn main() {
     }
 
     // Load ~/.config/turtle/config.ron
-    let raw_config = &fs::read_to_string("/home/pineapple/.config/turtle/config.ron").expect("failed to read config");
+    let home = env::var("HOME").unwrap();
+    let raw_config = &fs::read_to_string(format!("{}/.config/turtle/config.ron", home)).expect("failed to read config");
     let config: Config = Config::from(ron::from_str::<RonConfig>(raw_config).unwrap());
     let keybinds = ron::from_str::<RonConfig>(raw_config).unwrap().keybinds;
     let mousebinds = ron::from_str::<RonConfig>(raw_config).unwrap().mousebinds;
+
+    // Run autostart script
+    let _ = process::Command::new(format!("{}/.config/turtle/autostart", home)).spawn();
 
     turtle::setup_async_keys(&dpy, &keybinds, &mousebinds);
 
