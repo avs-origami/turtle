@@ -44,7 +44,7 @@
         (64, "bracketleft",  "next",     None),
         (64, "bracketright", "prev",     None),
 
-        (64, "Return",       "spawn",    Some( ["st"]        )),
+        (64, "Return",       "spawn",    Some( ["st"] )),
         (64, "space",        "spawn",    Some( ["dmenu_run"] )),
 
     ],
@@ -53,6 +53,6 @@
 
         (64, 1, "move"),
         (64, 3, "resize"),
-        
+
     ]
 )

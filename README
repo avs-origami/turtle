@@ -6,31 +6,33 @@
 |-----------------------|           ()---()
 =~=~=~=~=~=~=~=~=~=~=~=~=
 
-Turtle is a small and simple stacking window
-manager written in Rust. It aims to be simple
-while providing enough features to be practical for
-everyday use.
+Turtle is a small (271 sloc) stacking window manager written in Rust. It aims to
+be simple while providing enough features to be practical for everyday use.
 
 === CONFIGURATION
 =================
 
-Turtle can be configured by editing the config file
-located at ~/.config/turtle/config.ron. If this
-file doesn't exist you will need to create it for
-turtle to start. Try copying config.ron from this
-repo as a starting place for your configuration.
+Turtle can be configured by editing the config file located at 
+~/.config/turtle/config.ron. If this file doesn't exist you will need to create
+it for turtle to start. Try copying config.ron from this repo as a starting place
+for your configuration.
 
-Turtle also supports running a startup script. To
-do this create ~/.config/turtle/autostart and give
-it executable permissions. This script will then be
-run every time turtle is started.
+Turtle also supports running a startup script. To do this create
+~/.config/turtle/autostart and give it executable permissions. This script will then
+be run every time turtle is started.
+
+=== INSTALLATION
+================
+
+1. Run 'cargo build --release' and copy target/release/turtle to your path
+2. Copy config.ron to ~/.config/turtle/config.ron
+3. Start turtle through xinit or by creating a .desktop file in /usr/share/xsessions/
 
 === WORKSPACES
 ==============
 
-Turtle doesn't have workspaces. You can cycle
-forwards / backwards through open windows or switch
-to the last focused window though.
+Turtle doesn't have workspaces. You can cycle forwards / backwards through open
+windows or switch to the last focused window though.
 
 === POSSIBLE FUTURE ADDITIONS
 =============================
