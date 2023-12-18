@@ -83,9 +83,7 @@ fn main() {
                 },
 
                 xlib::CreateNotify => {
-                    let ev: xlib::XCreateWindowEvent = From::from(event);
-                    windows.push(ev.window);
-                    windows.moveslice((windows.len() - 1) ..= (windows.len() - 1), 0);
+                    let _ev: xlib::XCreateWindowEvent = From::from(event);
                 }
 
                 xlib::ConfigureRequest => {
@@ -96,11 +94,17 @@ fn main() {
                 xlib::MapRequest => {
                     let ev: xlib::XMapRequestEvent = From::from(event);
                     turtle::map(&dpy, ev, &config);
-                }
+                    windows.push(ev.window);
+                    windows.moveslice((windows.len() - 1) ..= (windows.len() - 1), 0);
+                },
 
                 xlib::DestroyNotify => {
-                    windows.remove(0);
-                }
+                    let ev: xlib::XCreateWindowEvent = From::from(event);
+                    if windows.contains(&ev.window) {
+                        let idx = windows.iter().position(|&r| r == ev.window).unwrap();
+                        windows.remove(idx);
+                    }
+                },
 
                 xlib::ButtonRelease => {
                     start.subwindow = 0;

@@ -44,7 +44,8 @@ pub fn kill_window(dpy: &*mut Display, xkey: &XKeyEvent) {
         if xkey.subwindow != 0 { xlib::XKillClient(*dpy, xkey.subwindow); }
     }
 }
- /// Spawn a program
+
+/// Spawn a program
 pub fn spawn(com: &Vec<&str>) {
     let _ = process::Command::new(com[0]).args(&com[1..]).spawn();
 }

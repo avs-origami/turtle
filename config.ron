@@ -45,7 +45,7 @@
         (64, "bracketright", "prev",     None),
 
         (64, "Return",       "spawn",    Some( ["st"] )),
-        (64, "space",        "spawn",    Some( ["dmenu_run"] )),
+        (64, "space",        "spawn",    Some( ["rofi", "-show", "run"] )),
 
     ],
 
