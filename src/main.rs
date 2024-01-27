@@ -1,6 +1,7 @@
 extern crate libc;
 extern crate x11;
 
+use std::io::Write;
 use std::{env, fs, process};
 use std::mem::zeroed;
 use std::ffi::CStr;
@@ -113,5 +114,17 @@ fn main() {
                 _ => {}
             };
         };
+
+        let fname = format!("{}/.config/turtle/info.txt", home);
+        let mut info_file = fs::File::create(fname).expect("Failed to create ~/.config/turtle/info.txt:");
+        if windows.len() > 0 {
+            info_file.write_all(
+                format!("focused:{}\n", windows[0]).as_bytes()
+            ).expect("Failed to write to ~/.config/turtle/info.txt:");
+        } else {
+            info_file.write_all(
+                b"focused: \n"
+            ).expect("Failed to write to ~/.config/turtle/info.txt:");
+        }
     }
 }

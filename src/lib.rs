@@ -83,16 +83,16 @@ pub fn shrink(dpy: &*mut Display, xkey: &XKeyEvent, cfg: &Config) {
     }
 }
 
-/// Switch to the next window
-pub fn next_window(dpy: &*mut Display, xkey: &XKeyEvent, windows: &mut Vec<u64>, root: Window) {
+/// Switch to the previous window
+pub fn prev_window(dpy: &*mut Display, xkey: &XKeyEvent, windows: &mut Vec<u64>, root: Window) {
     if xkey.subwindow != 0 {
-        unsafe { xlib::XCirculateSubwindowsDown(*dpy, root); };
+        unsafe { xlib::XCirculateSubwindowsUp(*dpy, root); };
         windows.moveslice((windows.len() - 1) ..= (windows.len() - 1), 0);
     }
 }
 
-/// Switch to the previous window
-pub fn prev_window(dpy: &*mut Display, xkey: &XKeyEvent, windows: &mut Vec<u64>, root: Window) {
+/// Switch to the next window
+pub fn next_window(dpy: &*mut Display, xkey: &XKeyEvent, windows: &mut Vec<u64>, root: Window) {
     if xkey.subwindow != 0 {
         unsafe { xlib::XCirculateSubwindowsDown(*dpy, root); };
         windows.moveslice(0 ..= 0, windows.len() - 1);
